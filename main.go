@@ -1,13 +1,11 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-
+	"db"
+	"db/mongo"
 	"words"
 )
 
@@ -23,16 +21,19 @@ func main() {
 
 	wordsList, err := words.LoadWords("el_GR.dic")
 	if err != nil {
-		panic(err)
+		log.Fatal(err)
 	}
 
-	client, err := connect("mongodb://localhost:27017")
+	config := mongo.Config{URI: "mongodb://localhost:27017", Database: "test", Collection: "anagrams"}
+
+	var saver db.DataSaver
+	saver = &mongo.Saver{}
+	err = saver.Connect(config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	fmt.Println("Connected to MongoDB!")
-	collection := client.Database("test").Collection("anagrams")
+	fmt.Println("Connected!")
 
 	wordsMap := make(map[string]int)
 	maxCount := 0
@@ -59,7 +60,7 @@ func main() {
 				Anagram{Word: word, SortedWord: sortedWord, Anagrams: anagrams, Count: count})
 			if len(wordsToAdd) >= 100 {
 				fmt.Println("Inserting 100 words")
-				insertItems(collection, wordsToAdd)
+				saver.InsertMany(wordsToAdd)
 				wordsToAdd = nil
 			}
 
@@ -73,51 +74,13 @@ func main() {
 
 	if len(wordsToAdd) > 0 {
 		fmt.Printf("Inserting %d words", len(wordsToAdd))
-		insertItems(collection, wordsToAdd)
+		saver.InsertMany(wordsToAdd)
 		wordsToAdd = nil
 	}
 
-	err = disconnect(client)
+	err = saver.Disconnect()
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("Connection to MongoDB closed.")
-}
-
-func connect(uri string) (client *mongo.Client, err error) {
-	// Set client options
-	clientOptions := options.Client().ApplyURI(uri)
-
-	// Connect to MongoDB
-	client, err = mongo.Connect(context.TODO(), clientOptions)
-
-	if err != nil {
-		return
-	}
-
-	// Check the connection
-	err = client.Ping(context.TODO(), nil)
-
-	return
-}
-
-func disconnect(client *mongo.Client) (err error) {
-	err = client.Disconnect(context.TODO())
-	return
-}
-
-func insertItem(collection *mongo.Collection, item interface{}) {
-	// Insert a single item
-	_, err := collection.InsertOne(context.TODO(), item)
-	if err != nil {
-		log.Fatal(err)
-	}
-}
-
-func insertItems(collection *mongo.Collection, items []interface{}) {
-	// Insert a single item
-	_, err := collection.InsertMany(context.TODO(), items)
-	if err != nil {
-		log.Fatal(err)
-	}
+	fmt.Println("Connection closed.")
 }
