@@ -16,7 +16,7 @@ func (s sortRunes) Len() int {
 	return len(s)
 }
 
-// SortString sorts a word's letters
+// SortString sorts a word's letters. Copied from https://stackoverflow.com/a/22698017/24054
 func SortString(s string) string {
 	r := []rune(s)
 	sort.Sort(sortRunes(r))
