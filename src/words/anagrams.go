@@ -1,4 +1,4 @@
-package main
+package words
 
 import (
 	"bufio"
@@ -7,7 +7,8 @@ import (
 	"strings"
 )
 
-func loadWords(path string) (words []string, err error) {
+// LoadWords loads a list of words from a file in path locatoin
+func LoadWords(path string) (words []string, err error) {
 	var text *os.File
 	text, err = os.Open(path)
 	if err != nil {
@@ -29,8 +30,8 @@ func loadWords(path string) (words []string, err error) {
 	return
 }
 
-// findAnagrams find anagrams of a word. Copied from https://stackoverflow.com/a/54881186/24054
-func findAnagrams(find string, words []string) []string {
+// FindAnagrams find anagrams of a word. Copied from https://stackoverflow.com/a/54881186/24054
+func FindAnagrams(find string, words []string) []string {
 	find = strings.ToUpper(find)
 	findSum := 0
 	findRunes := []rune(find)
@@ -77,25 +78,4 @@ func findAnagrams(find string, words []string) []string {
 		}
 	}
 	return anagrams
-}
-
-type sortRunes []rune
-
-func (s sortRunes) Less(i, j int) bool {
-	return s[i] < s[j]
-}
-
-func (s sortRunes) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
-}
-
-func (s sortRunes) Len() int {
-	return len(s)
-}
-
-// SortString sorts a word's letters
-func SortString(s string) string {
-	r := []rune(s)
-	sort.Sort(sortRunes(r))
-	return string(r)
 }

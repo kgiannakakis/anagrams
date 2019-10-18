@@ -7,6 +7,8 @@ import (
 
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
+
+	"words"
 )
 
 // Anagram maps a word with its anagrams
@@ -19,7 +21,7 @@ type Anagram struct {
 
 func main() {
 
-	words, err := loadWords("el_GR.dic")
+	wordsList, err := words.LoadWords("el_GR.dic")
 	if err != nil {
 		panic(err)
 	}
@@ -30,26 +32,26 @@ func main() {
 	}
 
 	fmt.Println("Connected to MongoDB!")
-	collection := client.Database("anagrams").Collection("anagrams")
+	collection := client.Database("test").Collection("anagrams")
 
 	wordsMap := make(map[string]int)
 	maxCount := 0
 
 	var wordsToAdd []interface{}
 
-	for i, word := range words {
+	for i, word := range wordsList {
 
 		if i%1000 == 0 && i > 0 {
 			fmt.Printf("Handling word %d\n", i)
 		}
 
-		sortedWord := SortString(word)
+		sortedWord := words.SortString(word)
 		_, exists := wordsMap[sortedWord]
 		if exists {
 			continue
 		}
 
-		anagrams := findAnagrams(word, words)
+		anagrams := words.FindAnagrams(word, wordsList)
 		count := len(anagrams)
 
 		if count > 1 {
